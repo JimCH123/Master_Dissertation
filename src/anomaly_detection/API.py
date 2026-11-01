@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import shap
 shap.initjs()
 from catboost import CatBoostClassifier
-from Preprocess import transform
+from src.anomaly_detection.Preprocess import transform
 from pathlib import Path
 from datetime import datetime
 from typing import Optional

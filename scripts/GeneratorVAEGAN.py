@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.decomposition import KernelPCA
 
-from VAEGAN import VAEGAN
+from src.models.VAEGAN import VAEGAN
 import tensorflow as tf
 from pathlib import Path
 
