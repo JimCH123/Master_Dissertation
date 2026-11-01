@@ -12,6 +12,30 @@ It combines:
     • A FastAPI server for real-time streaming simulation.
 
 -----------------------------------------------------------------------
+0. INSTALLATION (virtual environment)
+-----------------------------------------------------------------------
+Dependencies are declared in 'pyproject.toml' (Python 3.10 – 3.12, tested on 3.11).
+'uv.lock' pins the exact versions that were tested.
+
+Option A – uv (recommended, reproduces the tested versions)
+
+    git clone https://github.com/JimCH123/Master_Dissertation.git
+    cd Master_Dissertation
+    uv sync                      # creates .venv and installs everything
+    uv run python EDA.py         # run any script inside the environment
+
+Option B – venv + pip
+
+    git clone https://github.com/JimCH123/Master_Dissertation.git
+    cd Master_Dissertation
+    python -m venv .venv
+    .venv\Scripts\activate       # Windows
+    source .venv/bin/activate    # macOS / Linux
+    pip install .                # installs the dependencies only
+
+Run every script from the repository folder, e.g. 'python EDA.py'.
+
+-----------------------------------------------------------------------
 1. DATA PREPROCESSING
 -----------------------------------------------------------------------
 - Input file: 'uci-secom.csv'   (590-feature semiconductor dataset)

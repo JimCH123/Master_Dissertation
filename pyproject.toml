@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "master-dissertation-anomaly-detection"
+version = "1.0.0"
+description = "Interpretable imbalanced industrial anomaly detection on UCI-SECOM: VAE-GAN augmentation, CatBoost classification and TreeSHAP interpretation."
+readme = "README.md"
+authors = [{ name = "Dong-Jun Chen" }]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "tensorflow>=2.16,<2.22",   # VAE.py, VAEGAN.py, Generator*.py
+    "catboost>=1.2.8,<1.3",     # CatShap.py, API.py
+    "shap>=0.46",
+    "ipython>=8",               # needed by shap.initjs() in CatShap.py and API.py
+    "scikit-learn>=1.2.2",
+    "scikit-optimize>=0.10",    # Bayesian search (skopt) in CatShap.py
+    "scipy>=1.11",
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "joblib>=1.3",
+    "fastapi>=0.110",           # API.py
+    "uvicorn>=0.29",
+    "pydantic>=2",
+    "requests>=2.31",
+]
+
+# The scripts are run in place (python EDA.py, ...), so nothing is installed as a
+# module: `pip install .` / `uv sync` only installs the dependencies above.
+[tool.setuptools]
+py-modules = []

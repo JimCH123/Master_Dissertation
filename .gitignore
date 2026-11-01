@@ -1,0 +1,10 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python / CatBoost build output
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+catboost_info/
