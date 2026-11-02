@@ -112,11 +112,11 @@ def bayesian_search_params(X_train, y_train, X_test, y_test):
 
 def categoricalboost(X_train, y_train, X_test, best_params=None):
     clf = CatBoostClassifier(
-        max_depth=10,
-        iterations=1000,
+        max_depth=4,
+        iterations=73,
         learning_rate=0.1,
-        l2_leaf_reg=20,
-        min_data_in_leaf=24,
+        l2_leaf_reg=12,
+        min_data_in_leaf=6,
         scale_pos_weight=3,
         objective='Logloss',
         eval_metric='F1',
