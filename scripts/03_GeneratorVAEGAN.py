@@ -1,3 +1,4 @@
+#Best parameters: {'latent_dim': 39, 'enc_learning_rate': 0.0001, 'dis_learning_rate': 1e-05, 'epochs': 1000, 'batch_size': 64, 'feature_layer_idx': 2}
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.decomposition import KernelPCA
 
-from src.models.VAE import VAEGenerator
+from anomaly_detection.models import VAEGAN
 import tensorflow as tf
 from pathlib import Path
 
@@ -19,15 +20,17 @@ def load_data(file_path):
 def prepare_vae_data(df):
     fail_df = df[df['Pass/Fail']==1].select_dtypes(include=['float64','int64']).drop('Pass/Fail',axis=1)
     synthetic_num = df.shape[0] - len(fail_df) - len(fail_df)
-    return fail_df, synthetic_num
+    return fail_df, synthetic_num 
 
 
 def generate_anomaly_data(fail_df, synthetic_num, data_standard):
     fail_data = fail_df.values
     input_dim = fail_data.shape[1]
-    vae_gan = VAEGenerator(input_dim=input_dim, latent_dim=32)  
+    vae_gan = VAEGAN(input_dim=input_dim, latent_dim=32, feature_layer_idx=2)  
     vae_gan.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), 
+        enc_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
+        dec_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
+        discriminator_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001)  
     )
     vae_gan.fit(fail_data, epochs=200, batch_size=64, verbose=1) 
 
@@ -54,14 +57,14 @@ def KDE_plot(fail_df, synthetic_df):
                 label='Real Anomalies',  color='red')
         ax.hist(synthetic_df.iloc[:, feature_idx],
                 bins=50, density=True, alpha=0.5,
-                label='Synthetic Anomalies', color='blue')
+                label='Generated Anomalies', color='blue')
 
         sns.kdeplot(fail_df.iloc[:, feature_idx],
                      label='Real Anomalies', color='red',  ax=ax)
         sns.kdeplot(synthetic_df.iloc[:, feature_idx],
                      label='Generated Anomalies', color='blue', ax=ax)
 
-        ax.set_title(f'Feature {feature_idx}: Real vs. Generated', fontsize=12)
+        ax.set_title(f'Feature {feature_idx}: Real vs Generated', fontsize=11)
         ax.set_xlabel('Feature Value')
     axes[1].legend()
     plt.tight_layout()
@@ -89,12 +92,10 @@ def pca_check_generalize(fail_df, synthetic_df, synthetic_num):
 
 
 def plot_distribution(real_data, synthetic_data):
-    for feature_idx in range(3): 
+    for feature_idx in range(5): 
         plt.figure(figsize=(8, 6))
         plt.hist(real_data.iloc[:, feature_idx], bins=50, density=True, alpha=0.5, label='Real Data', color='red')
         plt.hist(synthetic_data.iloc[:, feature_idx], bins=50, density=True, alpha=0.5, label='Synthetic Data', color='blue')
-        sns.kdeplot(real_data.iloc[:, feature_idx], label='Real Data (KDE)', color='red')
-        sns.kdeplot(synthetic_data.iloc[:, feature_idx], label='Synthetic Data (KDE)', color='blue')
         plt.title(f'Distribution of Feature {feature_idx}')
         plt.xlabel('Feature Value')
         plt.ylabel('Density')
@@ -102,37 +103,37 @@ def plot_distribution(real_data, synthetic_data):
         plt.show()
 
 
-    
 
 def main():
-    ROOT = Path(__file__).parent
-    file_path = ROOT / "uci-secom-cleaned.csv"
-    synthetic_path = ROOT / "synthetic_vae.csv"
+    ROOT = Path(__file__).resolve().parent.parent
+    file_path = ROOT / "data" / "processed" / "uci-secom-cleaned.csv"
+    synthetic_path = ROOT / "data" / "synthetic" / "synthetic_vaegan.csv"
+    combined_path = ROOT / "data" / "synthetic" / "combined_data_vaegan.csv"
 
     data = load_data(file_path)
     print("Data loaded. Shape:\n", data.shape)
 
     fail_df, synthetic_num = prepare_vae_data(data)
     print("Train anomaly data shape:\n", fail_df.shape)
-    print("Synthetic data number:\n", synthetic_num)
+
+    synthetic_num = int(synthetic_num * 1)
     
     synthetic_df = generate_anomaly_data(fail_df, synthetic_num, data)
-    print("Synthetic anomalies data shape:\n", synthetic_df.shape)
+    print("Synthetic anomaly data shape:\n", synthetic_df.shape)
     print(synthetic_df.head())
 
+    synthetic_df.to_csv(synthetic_path, index = False)
+
     KDE_plot(fail_df, synthetic_df)
+
     pca_check_generalize(fail_df, synthetic_df, synthetic_num)
-
-    #plot_distribution(data, synthetic_df)
-
-    synthetic_df.to_csv(synthetic_path, index=False)    
-    print(f"Saved to {synthetic_path} successfully.\n", synthetic_df.shape)
+    # plot_distribution(data, synthetic_df)
 
     combined_df = pd.concat([data, synthetic_df], ignore_index=True)
     print("Combined data shape:\n", combined_df.shape)
 
-    combined_df.to_csv('combined_data_vae.csv', index=False)
-    print("Combined data saved to 'combined_data_vae.csv'")
+    combined_df.to_csv(combined_path, index=False)
+    print("Combined data saved to 'combined_data_vaegan.csv'")
 
 
 if __name__ == "__main__":

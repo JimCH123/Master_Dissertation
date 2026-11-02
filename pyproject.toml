@@ -30,5 +30,5 @@ dependencies = [
 
 # The scripts are run in place (python EDA.py, ...), so nothing is installed as a
 # module: `pip install .` / `uv sync` only installs the dependencies above.
-[tool.setuptools]
-py-modules = []
+[tool.setuptools.packages.find]
+where = ["src"]

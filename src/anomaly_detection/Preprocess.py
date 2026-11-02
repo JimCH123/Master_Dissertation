@@ -2,10 +2,10 @@ import numpy as np, joblib
 from pathlib import Path
 import pandas as pd
 
-ROOT   = Path(__file__).parent
-IDX    = np.load(ROOT / "idx.npy")               
-scaler = joblib.load(ROOT / "scaler.pkl")  
-ALL_COLS = np.load(ROOT / "all_cols.npy")
+ROOT   = Path(__file__).resolve().parent.parent.parent
+IDX    = np.load(ROOT / "artifacts" / "preprocessing" / "idx.npy")               
+scaler = joblib.load(ROOT / "artifacts" / "preprocessing" / "scaler.pkl")  
+ALL_COLS = np.load(ROOT / "artifacts" / "preprocessing" / "all_cols.npy")
 
 def transform(raw_list: list[float]) -> np.ndarray:
    

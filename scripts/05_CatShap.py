@@ -1,3 +1,4 @@
+#Best params: {'max_depth': 10, 'iterations': 1000, 'learning_rate': 0.1, 'l2_leaf_reg': 20, 'min_data_in_leaf': 24}, Best F1: 0.9539
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -70,11 +71,11 @@ def optimization(param_names, params, X_train, y_train):
 
 def bayesian_search_params(X_train, y_train, X_test, y_test):
     param_space = [
-        Integer(1, 5, name='max_depth'),
+        Integer(1, 10, name='max_depth'),
         Integer(10, 1000, name='iterations'), 
-        Real(0.001, 0.1, name='learning_rate', prior='log-uniform'),
+        Real(0.0001, 0.1, name='learning_rate', prior='log-uniform'),
         Integer(1, 20, name='l2_leaf_reg'),
-        Integer(1, 40, name='min_data_in_leaf')
+        Integer(1, 50, name='min_data_in_leaf')
     ]
 
     param_names = [
@@ -105,22 +106,24 @@ def bayesian_search_params(X_train, y_train, X_test, y_test):
     }
     best_f1 = -result.fun
     print(f"Best params: {best_params}, Best F1: {best_f1:.4f}")
+    return best_params
 
 
 
-def categoricalboost(X_train, y_train, X_test):
-    clf = CatBoostClassifier(max_depth=3,
-                            iterations=500,
-                            learning_rate=0.5,
-                            l2_leaf_reg=1,
-                            min_data_in_leaf=10,
-                            scale_pos_weight=3,
-                            objective='Logloss',
-                            eval_metric='F1',
-                            random_state=42, 
-                            boosting_type='Ordered',
-                            verbose=0
-    )
+def categoricalboost(X_train, y_train, X_test, best_params=None):
+    clf = CatBoostClassifier(
+        max_depth=10,
+        iterations=1000,
+        learning_rate=0.1,
+        l2_leaf_reg=20,
+        min_data_in_leaf=24,
+        scale_pos_weight=3,
+        objective='Logloss',
+        eval_metric='F1',
+        random_state=42,
+        boosting_type='Ordered',
+        verbose=0
+    )   
     clf.fit(X_train, y_train, early_stopping_rounds=30)
     y_pred = clf.predict(X_test) 
     y_scores = clf.predict_proba(X_test)[:, 1]
@@ -195,12 +198,12 @@ def plot_pr_curve(y_true, y_scores, title="Precision-Recall Curve"):
 
 
 
-def background_data(X_train, y_train):
+def background_data(X_train, y_train, background_path):
     bg_size = 1000
     normal_idx = np.where(y_train == 0)[0]
     idx = np.random.choice(normal_idx, size=bg_size, replace=False)
     background = X_train[idx].astype(np.float32) 
-    np.save("bg_1000.npy", background)              
+    np.save(background_path, background)              
     print("Saved background data:", background.shape)
     return background
 
@@ -229,14 +232,19 @@ def shap_explain(X_train, X_test, y_test, clf, data, background):
     shap_values_single = explainer(X_test_df.iloc[[sample_idx]])
     shap.plots.waterfall(shap_values_single[0])
 
-def model_save(clf, threshold = 0.5):
-    clf.save_model("model.cbm")        
-    np.save("threshold.npy", threshold)
+def model_save(clf, clf_path, threshold_path, threshold = 0.5):
+    clf.save_model(clf_path)        
+    np.save(threshold_path, threshold)
 
 
 def main():
-    ROOT = Path(__file__).parent
-    path = ROOT / "combined_data_vaegan.csv"
+    ROOT = Path(__file__).resolve().parent.parent
+    path = ROOT / "data" / "synthetic" / "combined_data_vaegan.csv"
+
+    clf_path = ROOT / "artifacts" / "model" / "model.cbm"
+    threshold_path = ROOT / "artifacts" / "model" / "threshold.npy"
+    background_path = ROOT / "artifacts" / "model" / "bg_1000.npy"
+
     data = load_path(path)
     print("Data shape:", data.shape)
     
@@ -250,8 +258,8 @@ def main():
     print("Training set shape:", X_train.shape)
     print("Test set shape:", X_test.shape)  
 
-    #best_param = bayesian_search_params(X_train, y_train, X_test, y_test)
-    
+    # best_param = bayesian_search_params(X_train, y_train, X_test, y_test)
+    # print(best_param)
     
     y_pred, y_scores, clf = categoricalboost(X_train, y_train, X_test)
 
@@ -261,12 +269,12 @@ def main():
     plot_histogram(y_test, y_pred, y_scores)
     plot_confusion_matrix(y_test, y_pred, title="Confusion Matrix for Catboost")
 
-    # plot_roc_curve(y_test, y_scores, title="ROC Curve for Catboost")
-    # plot_pr_curve(y_test, y_scores, title="Precision-Recall Curve for Catboost")
+    plot_roc_curve(y_test, y_scores, title="ROC Curve for Catboost")
+    plot_pr_curve(y_test, y_scores, title="Precision-Recall Curve for Catboost")
 
-    model_save(clf)
+    model_save(clf, clf_path, threshold_path)
     
-    background = background_data(X_train, y_train)
+    background = background_data(X_train, y_train, background_path)
     #shap_explain(X_train, X_test, y_test, clf, data, background)
     
 

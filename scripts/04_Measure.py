@@ -106,11 +106,11 @@ def plot_distance(total_kl_div_vae, total_js_div_vae, total_wd_vae, total_mmd_va
     plt.show()
 
 def main():
-    ROOT = Path(__file__).parent
-    anomaly_df_path = ROOT / "anomaly_data.csv"
-    synthetic_vae_path = ROOT / "synthetic_vae.csv"
-    synthetic_vaegan_path = ROOT / "synthetic_vaegan.csv"
-    
+    ROOT = Path(__file__).resolve().parent.parent
+    anomaly_df_path = ROOT / "data" / "processed" / "anomaly_data.csv"
+    synthetic_vae_path = ROOT / "data" / "synthetic" / "synthetic_vae.csv"
+    synthetic_vaegan_path = ROOT / "data" / "synthetic" / "synthetic_vaegan.csv"
+
     anomaly_df, synthetic_vae_df, synthetic_vaegan_df = load_data(anomaly_df_path, synthetic_vae_path, synthetic_vaegan_path)
     print("Load anomaly data.\n", anomaly_df.shape)
     print("Load synthetic VAE data.\n", synthetic_vae_df.shape)

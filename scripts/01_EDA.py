@@ -190,10 +190,15 @@ def save_real_anomaly_data(df, target_col):
     
 
 def main():
-    ROOT = Path(__file__).parent
-    file_path = ROOT / "uci-secom.csv"
-    output_path = ROOT / "uci-secom-cleaned.csv"  
-    anomaly_data_path = ROOT / "anomaly_data.csv"
+    ROOT = Path(__file__).resolve().parent.parent
+    file_path = ROOT / "data" / "raw" / "uci-secom.csv"
+    output_path = ROOT / "data" / "processed" / "uci-secom-cleaned.csv"
+    anomaly_data_path = ROOT / "data" / "processed" / "anomaly_data.csv"
+    test_data_path = ROOT / "data" / "streaming" / "test_data.csv"
+
+    all_cols_path = ROOT / "artifacts" / "preprocessing" / "all_cols.npy"
+    scaler_path = ROOT / "artifacts" / "preprocessing" / "scaler.pkl"
+    idx_path = ROOT / "artifacts" / "preprocessing" / "idx.npy"
 
     data = load_data(file_path)
     print("Data loaded, shape:\n", data.shape)
@@ -201,7 +206,7 @@ def main():
     # print(data.info())
 
     test_data, data = get_test_data(data)
-    test_data.to_csv(ROOT / "test_data.csv", index=False)
+    test_data.to_csv(test_data_path, index=False)
     print("Test data prepared with 6 normal and 4 anomalous samples, shape:\n", test_data.shape)
     print("The remained data, shape:\n", data.shape)
 
@@ -210,7 +215,7 @@ def main():
     print("After dropped time column, shape:\n", data.shape)
 
     ALL_COLS = data.drop(columns="Pass/Fail").columns.tolist()
-    np.save(ROOT / "all_cols.npy", ALL_COLS)
+    np.save(all_cols_path, ALL_COLS)
     print("Saved all_cols.npy")
 
     data = handle_missing_value(data)
@@ -231,7 +236,7 @@ def main():
 
     data_standard, scaler = data_standardization(data_filter, target_col='Pass/Fail')
     print("After standarlized data, shape:\n", data_standard.shape)
-    joblib.dump(scaler, ROOT / "scaler.pkl")
+    joblib.dump(scaler, scaler_path)
     print("Saved scaler.pkl")
 
     data_standard.to_csv(output_path, index=False)
@@ -250,7 +255,7 @@ def main():
 
     remain_features = fail_df.drop(columns="Pass/Fail").columns.tolist()
     IDX = np.array([ALL_COLS.index(name) for name in remain_features], dtype=np.int32)  #找出name在ALL_COLS.index的位置編號
-    np.save(ROOT / "idx.npy", IDX)
+    np.save(idx_path, IDX)
     print("Saved idx.npy")
 
     
